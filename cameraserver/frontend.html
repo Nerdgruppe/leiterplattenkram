@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>WS bare minimum</title>
+		<style>
+			* {
+				box-sizing: border-box;
+			}
+			
+			#camera {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				object-position: center;
+				object-fit: contain;
+				z-index: -10;
+			}
+			
+			#status {
+				position: fixed;
+				top: 1em;
+				left: 1em;
+				margin: 0;
+				padding: 1em;
+				background-color: rgba(100%, 100%, 100%, 50%);
+				border: 1px solid black;
+			}
+			
+			#toolbar {
+				position: fixed;
+				left: 0;
+				width: 100%;
+				bottom: 0;
+				display: flex;
+				flex-direction: row;
+				margin: 1em;
+				justify-content: center;
+			}
+			
+			button {
+				padding: 0;
+				width: 4em;
+				height: 4em;
+			}
+		</style>
+	</head>
+	<body>
+		<img id="camera" src="http://192.168.178.181:8080/stream">
+
+		<pre id="status">
+
+        </pre>
+
+		<div id="toolbar">
+			<button type="button" onclick="handle_toolbar(this, event)" data-event="home"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>home</title><path d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z"/></svg></button>
+			<button type="button" onclick="handle_toolbar(this, event)" data-event="z-up"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>pan-up</title><path d="M12,2.5L8,7H16L12,2.5M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10Z"/></svg></button>
+			<button type="button" onclick="handle_toolbar(this, event)" data-event="z-down"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>pan-down</title><path d="M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M8,17L12,21.5L16,17H8Z"/></svg></button>
+		</div>
+
+		<script>
+			const WS_URL = "ws://192.168.178.181:8765";
+			
+			const log = console.log;
+			
+			const status_fld = document.getElementById("status");
+			const active_keys = new Set();
+			
+			let ws = null;
+			let previous_kbd = {
+				up: false,
+				down: false,
+				left: false,
+				right: false,
+			}
+			
+			function send_event(type, value )
+			{
+				if(ws == null) {
+					alert("connection lost");
+				}
+				let event = {};
+				event[type] = value;
+				ws.send(JSON.stringify(event));
+				
+			}
+			
+			function handle_toolbar(target, ev)
+			{
+				let msg = target.getAttribute("data-event");
+				send_event("action", msg);
+			}
+			
+			function create_keyboard_state()
+			{
+				return {
+					up: active_keys.has('ArrowUp'),
+					down: active_keys.has('ArrowDown'),
+					left: active_keys.has('ArrowLeft'),
+					right: active_keys.has('ArrowRight'),
+				}
+			}
+			
+			function update_keyboard()
+			{
+				if(ws == null) {
+					return;
+				}
+				let current = create_keyboard_state();
+				
+				let has_changed = (
+				previous_kbd.up != current.up ||
+				previous_kbd.down != current.down ||
+				previous_kbd.left != current.left ||
+				previous_kbd.right != current.right
+				);
+				
+				if(!has_changed) {
+					return;
+				}
+				
+				previous_kbd = current;
+				
+				send_event("motion", current);
+			}
+			
+			function handle_keydown(e) {
+				active_keys.add(e.code);
+				update_keyboard();
+				
+				switch(e.code) {
+					case "ArrowUp":
+					case "ArrowDown":
+					case "ArrowLeft":
+					case "ArrowRight":
+					send_event("rel-move", e.code.substr(5).toLowerCase());
+					break;
+				}
+			}
+			function handle_keyup(e) {
+				active_keys.delete(e.code);
+				update_keyboard();
+			}
+			function handle_blur(e) {
+				active_keys.clear();
+				update_keyboard();
+			}
+			
+			function handle_msg(e)
+			{
+				let msg = JSON.parse(e.data);
+				console.log(msg);
+				
+				let props = msg.properties || [];
+				
+				let status = "";
+				for(const key of props)
+				{
+					status += key.key + ": " + String(key.value) + "\n";
+				}
+				
+				status_fld.innerText = status;
+			}
+			
+			function handle_open(e)
+			{
+				log("connected");
+				// sendBtn.disabled = false;
+			}
+			
+			function handle_close(e)
+			{
+				log("closed (" + e.code + ")");
+				// sendBtn.disabled = true;
+				ws = null;
+			}
+			
+			function handle_error(e)
+			{
+				log("error:", e)
+				ws = null;
+			}
+			
+			function connect() {
+				log("connecting to " + WS_URL + " ...");
+				ws = new WebSocket(WS_URL);
+				
+				ws.addEventListener('open', handle_open)
+				ws.addEventListener('message', handle_msg);
+				ws.addEventListener('close', handle_close);
+				ws.addEventListener('error', handle_error);
+			}
+			
+			window.addEventListener("load", connect);
+			
+			window.addEventListener('keydown', handle_keydown);
+			
+			window.addEventListener('keyup', handle_keyup);
+			
+			// Lose focus? Clear state so it doesn't get stuck.
+			window.addEventListener('blur', handle_blur);
+		</script>
+	</body>
+</html>

@@ -1,0 +1,12 @@
+# C# / Dotnet
+bin/
+obj/
+
+# Python
+__pycache__/
+.venv/
+
+# Zig
+.zig-cache/
+zig-out/
+

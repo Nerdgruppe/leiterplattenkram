@@ -12,28 +12,28 @@ import pygame.camera
 # SENDING:M114
 # X:88.00 Y:109.00 Z:51.50 E:0.00 Count X:7040 Y:8720 Z:20600
 
-IMG_STORE = Path("/home/felix/projects/experiments/wtf-leiterplattenkram/stitch_store")
+IMG_STORE = Path("/tmp/stitcher")
 
 # Boundary:
 # Top Left: X:87.30 Y:109.90 Z:51.50 E:0.00 Count X:6984 Y:8792 Z:20600
 # Bottom Right: X:166.30 Y:85.90 Z:51.50 E:0.00 Count X:13304 Y:6872 Z:20600
 
-pcb_left = 87.30
-pcb_right = 166.30
+pcb_left = 99.0
+pcb_right = 177
 
-pcb_top = 109.90
-pcb_bottom = 85.90
+pcb_top = 132.0
+pcb_bottom = 88
 
 
 # "horizontal"
 # Border at right: X:83.70 Y:105.90 Z:51.50 E:0.00 Count X:6696 Y:8472 Z:20600
 # Border at left: X:91.30 Y:105.90 Z:51.50 E:0.00 Count X:7304 Y:8472 Z:20600
-delta_x = 91.30 - 83.70
+delta_x = 140-132
 
 # "vertical"
 # Border at bottom: X:91.90 Y:111.70 Z:51.50 E:0.00 Count X:7352 Y:8936 Z:20600
 # border at top: X:91.90 Y:105.90 Z:51.50 E:0.00 Count X:7352 Y:8472 Z:20600
-delta_y = 111.70 - 105.90
+delta_y = 94 - 88
 
 overlap = 0.7  # 30% overlap
 
@@ -115,7 +115,7 @@ def main() -> None:
         print("no cameras")
         return
 
-    cam = pygame.camera.Camera("/dev/video1", (640, 480))
+    cam = pygame.camera.Camera("/dev/video0", (640, 480))
     try:
         cam.start()
         with Motion("/dev/ttyUSB0") as motion:

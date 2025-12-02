@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>EtchMaster</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" href="style.css">
+	</head>
+
+	<body>
+		<h1>EtchMaster</h1>
+
+		<form method="POST" class="settings">
+			<table>
+				<thead>
+					<tr>
+						<th>Setting</th>
+						<th>Value</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>Mode</td>
+						<td>
+							<label class="line"><input type="radio" name="mode" value="continuous" checked>Continuous</label>
+							<label class="line"><input type="radio" name="mode" value="pulse">Pulse</label>
+							<label class="line"><input type="radio" name="mode" value="pulse-reverse">Pulse-Reverse</label>
+						</td>
+					</tr>
+					<tr>
+						<td>Duration</td>
+						<td><input type="number" min="0" max="7200" name="duration" value="600">
+						s</td>
+					</tr>
+					<tr>
+						<td>Current Control</td>
+						<td>
+							<label><input type="checkbox" name="current-control">Enabled</label>
+						</td>
+					</tr>
+					<tr>
+						<td>Current Target</td>
+						<td>
+							
+						</td>
+					</tr>
+				</tbody>
+				<tfoot>
+					<tr>
+						<td colspan="2" class="controls">
+							<button type="reset">Revert</button>
+							<button type="submit" name="action" value="update">Save</button>
+						</td>
+					</tr>
+				</tfoot>
+			</table>
+		</form>
+
+		<table>
+			<thead>
+				<tr>
+					<th>Measurement</th>
+					<th>Value</th>
+					<th>Unit</th>
+				</tr>
+			</thead>
+
+			<tbody id="statusbody">
+			</tbody>
+		</table>
+
+		<form method="POST" class="controls">
+			<button type="submit" name="action" value="start">Start</button>
+			<button type="submit" name="action" value="stop">Stop</button>
+		</form>
+
+		<script src="script.js"></script>
+	</body>
+</html>

@@ -1,0 +1,86 @@
+* {
+    box-sizing: border-box;
+}
+
+html {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    margin: 1em;
+}
+
+h1 {
+    margin: 0;
+    padding: 0.25em;
+    background-color: darkblue;
+    color: white;
+    text-align: center;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+form label {
+    display: inline-block;
+}
+
+form label.line {
+    display: block;
+}
+
+form input[type="number"] {
+    text-align: right;
+}
+
+form.settings button {
+    margin: 0.5em 1em;
+}
+
+.controls {
+    display: flex;
+    flex-direction: row;
+    gap: 1em;
+    justify-content: center;
+}
+
+.controls button {
+    width: 5em;
+    height: 5em;
+}
+
+td.controls {
+    display: table-cell;
+    text-align: right;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+table td,
+th {
+    border: 1px solid black;
+    padding: 0.5em;
+    vertical-align: top;
+}
+
+table thead tr {
+    background-color: darkblue;
+    color: white;
+    text-align: left;
+}
+
+table tbody tr:nth-of-type(even) {
+    background-color: #DDD;
+}
+
+.al-right {
+    text-align: right;
+}

@@ -1,0 +1,115 @@
+esphome:
+  name: platinenfooburner
+  friendly_name: PlatinenFooBurner
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+#api:
+#  encryption:
+#    key: "cU9NjeFwd0z9IfVDZPCW7BUaBCWDObZL7msnox5JXQg="
+
+ota:
+  - platform: esphome
+    password: "d3d85f91d03329c133fdc0ce4be13884"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Platinenfooburner"
+    password: "UbxFLp8VoDwj"
+
+captive_portal:
+
+web_server:
+
+output:
+  - platform: gpio
+    pin: GPIO6 
+    id: abtrag_power
+    inverted: True
+
+  - platform: gpio
+    pin: GPIO7
+    id: reverse_power
+    inverted: True
+
+switch:
+  - platform: template
+    id: aetzvorgang
+    name: ätzen
+    optimistic: True
+    on_turn_on: 
+      then:
+        - logger.log: "Ätzen Start"
+        - script.execute: aetzscript
+        - delay: !lambda "return id(run_time).state * 60000;"
+        - logger.log: "Ätzen Zeit Ende"
+        - switch.turn_off: aetzvorgang
+
+number:
+  - platform: template
+    name: "Abtragzeit"
+    id: abtrag_time
+    optimistic: True
+    min_value: 0.1
+    max_value: 30
+    step: 0.1
+    restore_value: True
+    unit_of_measurement: s
+
+  - platform: template
+    name: "Auftragzeit"
+    id: auftrag_time
+    optimistic: True
+    min_value: 0.1
+    max_value: 30
+    step: 0.1
+    restore_value: True
+    unit_of_measurement: s
+
+  - platform: template
+    name: "Pausezeit"
+    id: pause_time
+    optimistic: True
+    min_value: 0.1
+    max_value: 5
+    step: 0.1
+    restore_value: True
+    unit_of_measurement: s
+
+  - platform: template
+    name: "Ätzzeit"
+    id: run_time
+    optimistic: True
+    min_value: 1
+    max_value: 60
+    step: 1
+    restore_value: True
+    unit_of_measurement: min
+
+
+script:
+  - id: aetzscript
+    then:
+    - while:
+        condition:
+          switch.is_on: aetzvorgang
+        then:
+          - output.turn_on: reverse_power
+          - delay: !lambda "return id(auftrag_time).state * 1000;"
+          - output.turn_off: reverse_power
+          - delay: !lambda "return id(pause_time).state * 1000;"
+          - output.turn_on: abtrag_power
+          - delay: !lambda "return id(abtrag_time).state * 1000;"
+          - output.turn_off: abtrag_power
+          - delay: !lambda "return id(pause_time).state * 1000;"

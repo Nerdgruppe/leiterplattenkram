@@ -32,6 +32,14 @@ captive_portal:
 
 web_server:
 
+#binary_sensor:
+#  - platform: gpio
+#    pin: GPIO1
+#    id: Fussschalter
+#    on_press: 
+#      then:
+#        - switch.toggle: aetzvorgang
+
 output:
   - platform: gpio
     pin: GPIO6 
@@ -43,6 +51,11 @@ output:
     id: reverse_power
     inverted: True
 
+  - platform: gpio
+    pin: GPIO8
+    id: spuelung_power
+    inverted: True
+
 switch:
   - platform: template
     id: aetzvorgang
@@ -50,11 +63,24 @@ switch:
     optimistic: True
     on_turn_on: 
       then:
+        - switch.turn_on: spuelung
         - logger.log: "Ätzen Start"
         - script.execute: aetzscript
         - delay: !lambda "return id(run_time).state * 60000;"
         - logger.log: "Ätzen Zeit Ende"
         - switch.turn_off: aetzvorgang
+  
+  - platform: template
+    id: spuelung
+    name: spuelung
+    optimistic: True
+    #lambda: return id(spuelung_power);
+    on_turn_on: 
+      then:
+        - output.turn_on: spuelung_power
+    on_turn_off: 
+      then:
+        - output.turn_off: spuelung_power
 
 number:
   - platform: template
@@ -113,3 +139,8 @@ script:
           - delay: !lambda "return id(abtrag_time).state * 1000;"
           - output.turn_off: abtrag_power
           - delay: !lambda "return id(pause_time).state * 1000;"
+          - if: 
+              condition:
+                - switch.is_off: aetzvorgang
+              then:
+                - switch.turn_off: spuelung

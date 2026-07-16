@@ -25,7 +25,7 @@ wifi:
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
-    ssid: "Platinenfooburner"
+    ssid: "Platinensfooburner"
     password: "UbxFLp8VoDwj"
 
 captive_portal:
@@ -87,31 +87,31 @@ number:
     name: "Abtragzeit"
     id: abtrag_time
     optimistic: True
-    min_value: 0.1
-    max_value: 30
-    step: 0.1
+    min_value: 1
+    max_value: 1000
+    step: 1
     restore_value: True
-    unit_of_measurement: s
+    unit_of_measurement: 'µs'
 
   - platform: template
     name: "Auftragzeit"
     id: auftrag_time
     optimistic: True
-    min_value: 0.1
-    max_value: 30
-    step: 0.1
+    min_value: 1
+    max_value: 1000
+    step: 1
     restore_value: True
-    unit_of_measurement: s
+    unit_of_measurement: 'µs'
 
   - platform: template
     name: "Pausezeit"
     id: pause_time
     optimistic: True
-    min_value: 0.1
-    max_value: 5
-    step: 0.1
+    min_value: 1
+    max_value: 1000
+    step: 1
     restore_value: True
-    unit_of_measurement: s
+    unit_of_measurement: 'µs'
 
   - platform: template
     name: "Ätzzeit"
@@ -131,16 +131,31 @@ script:
         condition:
           switch.is_on: aetzvorgang
         then:
-          - output.turn_on: reverse_power
-          - delay: !lambda "return id(auftrag_time).state * 1000;"
-          - output.turn_off: reverse_power
-          - delay: !lambda "return id(pause_time).state * 1000;"
-          - output.turn_on: abtrag_power
-          - delay: !lambda "return id(abtrag_time).state * 1000;"
-          - output.turn_off: abtrag_power
-          - delay: !lambda "return id(pause_time).state * 1000;"
-          - if: 
-              condition:
-                - switch.is_off: aetzvorgang
-              then:
-                - switch.turn_off: spuelung
+          - lambda: |-
+              uint32_t auftrag_us = (uint32_t)id(auftrag_time).state;
+              uint32_t pause_us = (uint32_t)id(pause_time).state;
+              uint32_t abtrag_us = (uint32_t)id(abtrag_time).state;
+
+              auto reverse_p = id(reverse_power);
+              auto abtrag_p = id(abtrag_power);
+
+              // Auftrag phase (Reverse power ON)
+              reverse_p->turn_on();
+              delayMicroseconds(auftrag_us);
+              reverse_p->turn_off();
+
+              // Pause phase
+              delayMicroseconds(pause_us);
+
+              // Abtrag phase (Abtrag power ON)
+              abtrag_p->turn_on();
+              delayMicroseconds(abtrag_us);
+              abtrag_p->turn_off();
+
+              // Pause phase
+              delayMicroseconds(pause_us);
+    - if: 
+        condition:
+          - switch.is_off: aetzvorgang
+        then:
+          - switch.turn_off: spuelung

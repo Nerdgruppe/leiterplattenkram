@@ -87,31 +87,31 @@ number:
     name: "Abtragzeit"
     id: abtrag_time
     optimistic: True
-    min_value: 0.1
-    max_value: 30
-    step: 0.1
+    min_value: 1
+    max_value: 1000
+    step: 1
     restore_value: True
-    unit_of_measurement: s
+    unit_of_measurement: "µs"
 
   - platform: template
     name: "Auftragzeit"
     id: auftrag_time
     optimistic: True
-    min_value: 0.1
-    max_value: 30
-    step: 0.1
+    min_value: 1
+    max_value: 1000
+    step: 1
     restore_value: True
-    unit_of_measurement: s
+    unit_of_measurement: "µs"
 
   - platform: template
     name: "Pausezeit"
     id: pause_time
     optimistic: True
-    min_value: 0.1
-    max_value: 5
-    step: 0.1
+    min_value: 1
+    max_value: 1000
+    step: 1
     restore_value: True
-    unit_of_measurement: s
+    unit_of_measurement: "µs"
 
   - platform: template
     name: "Ätzzeit"
@@ -126,21 +126,39 @@ number:
 
 script:
   - id: aetzscript
+    mode: single
     then:
-    - while:
-        condition:
-          switch.is_on: aetzvorgang
-        then:
-          - output.turn_on: reverse_power
-          - delay: !lambda "return id(auftrag_time).state * 1000;"
-          - output.turn_off: reverse_power
-          - delay: !lambda "return id(pause_time).state * 1000;"
-          - output.turn_on: abtrag_power
-          - delay: !lambda "return id(abtrag_time).state * 1000;"
-          - output.turn_off: abtrag_power
-          - delay: !lambda "return id(pause_time).state * 1000;"
-          - if: 
-              condition:
-                - switch.is_off: aetzvorgang
-              then:
-                - switch.turn_off: spuelung
+      - lambda: |-
+          const uint32_t auftrag_us = static_cast<uint32_t>(id(auftrag_time).state);
+          const uint32_t abtrag_us = static_cast<uint32_t>(id(abtrag_time).state);
+          const uint32_t pause_us = static_cast<uint32_t>(id(pause_time).state);
+
+          auto wait_us = [](uint32_t us) {
+            if (us == 0)
+              return;
+            const int64_t start = esp_timer_get_time();
+            while (esp_timer_get_time() - start < us) {
+              // Busy-wait loop with direct ESP32 timer polling.
+              // This avoids the scheduler-based 1 ms delay ceiling.
+            }
+          };
+
+          while (id(aetzvorgang).state) {
+            id(reverse_power).turn_on();
+            wait_us(auftrag_us);
+            id(reverse_power).turn_off();
+
+            wait_us(pause_us);
+
+            id(abtrag_power).turn_on();
+            wait_us(abtrag_us);
+            id(abtrag_power).turn_off();
+
+            wait_us(pause_us);
+          }
+
+      - if:
+          condition:
+            - switch.is_off: aetzvorgang
+          then:
+            - switch.turn_off: spuelung

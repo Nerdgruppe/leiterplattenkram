@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<OperationPixelArithmetic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <LayerRangeSelection>Bottom</LayerRangeSelection>
+  <LayerIndexStart>0</LayerIndexStart>
+  <LayerIndexEnd>0</LayerIndexEnd>
+  <ProfileIsDefault>false</ProfileIsDefault>
+  <Operator>Set</Operator>
+  <ApplyMethod>ModelWalls</ApplyMethod>
+  <WallThickness>10</WallThickness>
+  <WallThicknessStart>10</WallThicknessStart>
+  <WallThicknessEnd>20</WallThicknessEnd>
+  <WallChamfer>false</WallChamfer>
+  <IgnoreAreaOperator>SmallerThan</IgnoreAreaOperator>
+  <IgnoreAreaThreshold>5000</IgnoreAreaThreshold>
+  <NoiseMinOffset>-128</NoiseMinOffset>
+  <NoiseMaxOffset>128</NoiseMaxOffset>
+  <NoiseThreshold>0</NoiseThreshold>
+  <NoisePixelArea>1</NoisePixelArea>
+  <NoisePasses>1</NoisePasses>
+  <Value>30</Value>
+  <ValueStep>0</ValueStep>
+  <UsePattern>false</UsePattern>
+  <ThresholdType>Binary</ThresholdType>
+  <ThresholdMaxValue>255</ThresholdMaxValue>
+  <PatternAlternatePerLayersNumber>1</PatternAlternatePerLayersNumber>
+  <PatternInvert>false</PatternInvert>
+  <PatternText>0 128
+128 0</PatternText>
+  <PatternTextAlternate>128 0
+0 128</PatternTextAlternate>
+  <PatternGenMinBrightness>0</PatternGenMinBrightness>
+  <PatternGenBrightness>128</PatternGenBrightness>
+  <PatternGenInfillThickness>10</PatternGenInfillThickness>
+  <PatternGenInfillSpacing>20</PatternGenInfillSpacing>
+  <Kernel>
+    <UseDynamicKernel>false</UseDynamicKernel>
+    <DynamicKernelShape>Ellipse</DynamicKernelShape>
+    <AnchorX>-1</AnchorX>
+    <AnchorY>-1</AnchorY>
+    <MatrixText>1 1 1
+1 1 1
+1 1 1</MatrixText>
+    <MatrixWidth>3</MatrixWidth>
+    <MatrixHeight>3</MatrixHeight>
+    <KernelShape>Rectangle</KernelShape>
+    <Anchor>
+      <X>-1</X>
+      <Y>-1</Y>
+    </Anchor>
+  </Kernel>
+</OperationPixelArithmetic>

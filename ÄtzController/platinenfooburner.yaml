@@ -1,6 +1,14 @@
 esphome:
   name: platinenfooburner
   friendly_name: PlatinenFooBurner
+  on_shutdown:
+    then:
+      - lambda: id(hbridge_controller).stop();
+
+external_components:
+  - source:
+      type: local
+      path: components
 
 esp32:
   board: esp32-s3-devkitc-1
@@ -42,19 +50,16 @@ web_server:
 
 output:
   - platform: gpio
-    pin: GPIO6 
-    id: abtrag_power
-    inverted: True
-
-  - platform: gpio
-    pin: GPIO7
-    id: reverse_power
-    inverted: True
-
-  - platform: gpio
-    pin: GPIO8
+    pin: GPIO10
     id: spuelung_power
     inverted: True
+
+hbridge:
+  id: hbridge_controller
+  a_high_side_pin: GPIO6
+  a_low_side_pin: GPIO7
+  b_high_side_pin: GPIO8
+  b_low_side_pin: GPIO9
 
 switch:
   - platform: template
@@ -65,10 +70,18 @@ switch:
       then:
         - switch.turn_on: spuelung
         - logger.log: "Ätzen Start"
-        - script.execute: aetzscript
+        - lambda: |-
+            id(hbridge_controller).start(
+              static_cast<uint32_t>(id(auftrag_time).state),
+              static_cast<uint32_t>(id(abtrag_time).state),
+              static_cast<uint32_t>(id(pause_time).state));
         - delay: !lambda "return id(run_time).state * 60000;"
         - logger.log: "Ätzen Zeit Ende"
         - switch.turn_off: aetzvorgang
+    on_turn_off:
+      then:
+        - lambda: id(hbridge_controller).stop();
+        - switch.turn_off: spuelung
   
   - platform: template
     id: spuelung
@@ -87,31 +100,31 @@ number:
     name: "Abtragzeit"
     id: abtrag_time
     optimistic: True
-    min_value: 0.1
-    max_value: 30
-    step: 0.1
+    min_value: 1
+    max_value: 1000
+    step: 1
     restore_value: True
-    unit_of_measurement: s
+    unit_of_measurement: us
 
   - platform: template
     name: "Auftragzeit"
     id: auftrag_time
     optimistic: True
-    min_value: 0.1
-    max_value: 30
-    step: 0.1
+    min_value: 1
+    max_value: 1000
+    step: 1
     restore_value: True
-    unit_of_measurement: s
+    unit_of_measurement: us
 
   - platform: template
     name: "Pausezeit"
     id: pause_time
     optimistic: True
-    min_value: 0.1
-    max_value: 5
-    step: 0.1
+    min_value: 1
+    max_value: 1000
+    step: 1
     restore_value: True
-    unit_of_measurement: s
+    unit_of_measurement: us
 
   - platform: template
     name: "Ätzzeit"
@@ -122,25 +135,3 @@ number:
     step: 1
     restore_value: True
     unit_of_measurement: min
-
-
-script:
-  - id: aetzscript
-    then:
-    - while:
-        condition:
-          switch.is_on: aetzvorgang
-        then:
-          - output.turn_on: reverse_power
-          - delay: !lambda "return id(auftrag_time).state * 1000;"
-          - output.turn_off: reverse_power
-          - delay: !lambda "return id(pause_time).state * 1000;"
-          - output.turn_on: abtrag_power
-          - delay: !lambda "return id(abtrag_time).state * 1000;"
-          - output.turn_off: abtrag_power
-          - delay: !lambda "return id(pause_time).state * 1000;"
-          - if: 
-              condition:
-                - switch.is_off: aetzvorgang
-              then:
-                - switch.turn_off: spuelung
